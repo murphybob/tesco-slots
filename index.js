@@ -105,8 +105,16 @@ function formatSlotTime(slot) {
         console.log("Slots available, sending email notification");
         await sendEmail(
             NOTIFICATION_TARGET,
-            "TESCO: Slots Available!",
+            "SlotBot: Slots Available!",
             "The following slots were available\n\n" + slotsAvailable.map(formatSlotTime).join("\n"));
+    }
+    else {
+        console.log("No slots available, sending email notification");
+        await sendEmail(
+            NOTIFICATION_TARGET,
+            "SlotBot: No slots",
+            "The following slots were unavailable\n\n" + slotsUnvailable.map(formatSlotTime).join("\n"));
+
     }
 
     console.log("Closing");
