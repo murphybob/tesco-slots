@@ -11,7 +11,7 @@ const SLOT_TYPE = {
 
 const SLOTS_PAGE = "https://www.tesco.com/groceries/en-GB/slots/delivery";
 const NOTIFICATION_SOURCE = "murphybob@gmail.com";
-const NOTIFICATION_TARGET = "murphybob@gmail.com";
+const NOTIFICATION_TARGET = process.env.NOTIFICATION_TARGET;
 
 async function getSlotsData(page, date, type, csrf) {
     const url = `${SLOTS_PAGE}/${date.toISOString().slice(0, 10)}?slotGroup=${type}`;
@@ -104,7 +104,10 @@ function formatSlotTime(slot) {
         await sendEmail(
             NOTIFICATION_TARGET,
             "SlotBot: Slots Available!",
-            "The following slots were available\n\n" + slotsAvailable.map(formatSlotTime).join("\n")
+            "" +
+            "The following slots were available\n\n" +
+            slotsAvailable.map(formatSlotTime).join("\n") +
+            "\n\nhttps://www.tesco.com/groceries/en-GB/slots/delivery/"
         );
     }
 
