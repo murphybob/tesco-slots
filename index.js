@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const R = require("ramda");
 const dateAdd = require('date-fns/add');
 require('dotenv').config();
+const { IncomingWebhook } = require('@slack/webhook');
 const mailjet = require('node-mailjet').connect(process.env.MAILJET_KEY, process.env.MAILJET_SECRET);
 
 const SLOT_TYPE = {
@@ -12,6 +13,8 @@ const SLOT_TYPE = {
 const SLOTS_PAGE = "https://www.tesco.com/groceries/en-GB/slots/delivery";
 const NOTIFICATION_SOURCE = "murphybob@gmail.com";
 const NOTIFICATION_TARGET = process.env.NOTIFICATION_TARGET;
+
+const webhook = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
 
 async function getSlotsData(page, date, type, csrf) {
     const url = `${SLOTS_PAGE}/${date.toISOString().slice(0, 10)}?slotGroup=${type}`;
@@ -42,7 +45,7 @@ async function sendEmail(to, subject, text, html = "") {
                 {
                     "From": {
                         "Email": NOTIFICATION_SOURCE,
-                        "Name": "SlotBot"
+                        "Name": APP_NAME
                     },
                     "To": [
                         {
@@ -101,14 +104,21 @@ function formatSlotTime(slot) {
 
     if (slotsAvailable.length > 0) {
         console.log("Slots available, sending email notification");
-        await sendEmail(
-            NOTIFICATION_TARGET,
-            "SlotBot: Slots Available!",
-            "" +
+        const message = "" +
             "The following slots were available\n\n" +
             slotsAvailable.map(formatSlotTime).join("\n") +
-            "\n\nhttps://www.tesco.com/groceries/en-GB/slots/delivery/"
+            "\n\nhttps://www.tesco.com/groceries/en-GB/slots/delivery/";
+        const emailRequest = sendEmail(
+            NOTIFICATION_TARGET,
+            `${APP_NAME}: Slots Available!`,
+            message
         );
+        const slackRequest = webhook.send({
+            username: APP_NAME,
+            icon_emoji: ":slot_machine:",
+            text: message
+        })
+        await Promise.all([emailRequest, slackRequest])
     }
 
     console.log("Closing");
