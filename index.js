@@ -10,6 +10,14 @@ const SLOT_TYPE = {
     FLEXI_SAVER: 4
 };
 
+const LOCATION_ID = {
+    HISTON_HOME: 2065,
+    NOTTINGHAM: 5379
+}
+
+const LOOK_AHEAD_WEEKS = 4
+
+const APP_NAME = "SlotBot"
 const SLOTS_PAGE = "https://www.tesco.com/groceries/en-GB/slots/delivery";
 const NOTIFICATION_SOURCE = "murphybob@gmail.com";
 const NOTIFICATION_TARGET = process.env.NOTIFICATION_TARGET;
@@ -26,7 +34,7 @@ async function getSlotsData(page, date, type, csrf) {
                 "Accept": "application/json",
                 "x-csrf-token": csrf
             }
-        },);
+        });
         return await response.json();
     }, url, csrf);
     return json.slots;
@@ -90,7 +98,7 @@ function formatSlotTime(slot) {
     const csrf = await page.$eval("[name=_csrf]", el => el.value);
 
     let slotsAvailable = [];
-    const offsets = R.map(R.multiply(7), R.range(0, 3));
+    const offsets = R.map(R.multiply(7), R.range(0, LOOK_AHEAD_WEEKS));
     for (const offset of offsets) {
         const date = dateAdd(new Date(), {days: offset});
         console.log("Querying slots for", date);
